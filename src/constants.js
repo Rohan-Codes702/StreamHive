@@ -1,1 +1,1 @@
-export const Db_Name = "StreamHiva";
+export const DB_NAME = "StreamHive";

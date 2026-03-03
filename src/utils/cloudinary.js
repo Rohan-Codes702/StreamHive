@@ -1,5 +1,6 @@
 import { v2 as cloudinary } from 'cloudinary';
 import dotenv from 'dotenv';
+import fs from "fs";
 
 dotenv.config();
 
@@ -10,19 +11,40 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-const uploadImage = async () => {
+const uploadOnCloudinary = async (localFilePath) => {
     try {
-        const uploadResult = await cloudinary.uploader.upload(
-            'https://res.cloudinary.com/demo/image/upload/getting-started/shoes.jpg',
-            {
-                public_id: 'shoes',
-            }
-        );
+        if (!localFilePath) return null;
 
-        console.log(uploadResult);
+        // Upload the file on cloudinary
+        const response = await cloudinary.uploader.upload(localFilePath, {
+            resource_type: "auto"
+        });
+
+        // File has been uploaded successfully
+        // Remove the locally saved temporary file
+        fs.unlinkSync(localFilePath);
+
+        return response;
     } catch (error) {
-        console.log(error);
+        // Remove the locally saved temporary file as the upload operation got failed
+        fs.unlinkSync(localFilePath);
+        return null;
     }
 };
 
-uploadImage();
+const deleteOnCloudinary = async (publicId, resourceType = "image") => {
+    try {
+        if (!publicId) return null;
+
+        const result = await cloudinary.uploader.destroy(publicId, {
+            resource_type: resourceType
+        });
+
+        return result;
+    } catch (error) {
+        return null;
+    }
+};
+
+export { uploadOnCloudinary, deleteOnCloudinary };
+
